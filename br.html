@@ -1,0 +1,295 @@
+<html>
+   <!-- Babylon.js -->
+        <script src="https://code.jquery.com/pep/0.4.2/pep.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.2/dat.gui.min.js"></script>
+        <script src="https://preview.babylonjs.com/cannon.js"></script>
+        <script src="https://preview.babylonjs.com/Oimo.js"></script>
+        <script src="https://preview.babylonjs.com/earcut.min.js"></script>
+        <script src="https://preview.babylonjs.com/babylon.js"></script>
+        <script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+        <script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+        <script src="https://preview.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
+        <script src="https://preview.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+        <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+        <script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+        <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+
+        <style>
+            html, body {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                 -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+            }
+
+            #renderCanvas {
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+        </style>
+    <canvas id="renderCanvas"></canvas>
+    <script>
+        var canvas = document.getElementById("renderCanvas");
+        var engine = new BABYLON.Engine(canvas, true);
+
+        canvas.style.width = "25%";
+canvas.style.height = "25%";
+
+canvas.style.webkitTransform = "scale3d(4.0, 4.0, 1.0)";
+canvas.style.webkitTransformOrigin = "0 0 0";
+
+var createScene = function () {
+    
+    engine.setHardwareScalingLevel(.5);
+    var scene = new BABYLON.Scene(engine);
+    var light = new BABYLON.DirectionalLight("dir01", new BABYLON.Vector3(0, -1, -0.3), scene);
+    var camera = new BABYLON.UniversalCamera("Camera", new BABYLON.Vector3(0, 10, -20), scene);
+    camera.speed = 0.4;
+    camera.touchAngularSensibility = 4000
+    camera.ellipsoid.x = .2, camera.ellipsoid.z = .2, camera.ellipsoid.y = .85;
+    camera.attachControl(canvas, true);
+
+    light.position = new BABYLON.Vector3(20, 60, 30);
+
+    scene.ambientColor = BABYLON.Color3.FromInts(10, 30, 10);
+    scene.clearColor = BABYLON.Color3.FromInts(127, 165, 13);
+    scene.gravity = new BABYLON.Vector3(0, -0.5, 0);
+ var light2 = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
+
+    light2.position = new BABYLON.Vector3(20, 60, 30);
+    light2.intensity = .06
+    // Fog
+    /*scene.fogMode = BABYLON.Scene.FOGMODE_EXP;
+    scene.fogDensity = 0.02;
+    scene.fogColor = scene.clearColor;
+*/
+    // Skybox
+    var skybox = BABYLON.Mesh.CreateBox("skyBox", 150.0, scene);
+    var skyboxMaterial = new BABYLON.StandardMaterial("skyBox", scene);
+    skyboxMaterial.backFaceCulling = false;
+    skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("https://www.babylonjs-playground.com/textures/skybox", scene);
+    skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+    skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
+    skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+    skyboxMaterial.disableLighting = true;
+    skybox.material = skyboxMaterial;
+    skybox.infiniteDistance = true;
+
+    // Invisible borders
+    var border0 = BABYLON.Mesh.CreateBox("border0", 1, scene);
+    border0.scaling = new BABYLON.Vector3(1, 100, 100);
+    border0.position.x = -50.0;
+    border0.checkCollisions = true;
+    border0.isVisible = false;
+
+    var border1 = BABYLON.Mesh.CreateBox("border1", 1, scene);
+    border1.scaling = new BABYLON.Vector3(1, 100, 100);
+    border1.position.x = 50.0;
+    border1.checkCollisions = true;
+    border1.isVisible = false;
+
+    var border2 = BABYLON.Mesh.CreateBox("border2", 1, scene);
+    border2.scaling = new BABYLON.Vector3(100, 100, 1);
+    border2.position.z = 50.0;
+    border2.checkCollisions = true;
+    border2.isVisible = false;
+
+    var border3 = BABYLON.Mesh.CreateBox("border3", 1, scene);
+    border3.scaling = new BABYLON.Vector3(100, 100, 1);
+    border3.position.z = -50.0;
+    border3.checkCollisions = true;
+    border3.isVisible = false;
+
+    // Ground
+    var ground = BABYLON.Mesh.CreateGroundFromHeightMap("ground", "https://www.babylonjs-playground.com/textures/heightMap.png", 100, 100, 100, 0, 5, scene, false);
+// Create terrain material
+  var groundMaterial = new BABYLON.StandardMaterial("ground", scene);
+    groundMaterial.diffuseTexture = new BABYLON.Texture("https://www.babylonjs-playground.com/textures/ground.jpg", scene);
+
+    groundMaterial.diffuseTexture.uScale = 6;
+    groundMaterial.diffuseTexture.vScale = 6;
+    groundMaterial.diffuseColor = new BABYLON.Color3(0.3, 0.3, 0.3);
+    groundMaterial.specularColor = new BABYLON.Color3(0, .8, 0);
+    ground.material = groundMaterial;
+    ground.receiveShadows = true;
+    ground.checkCollisions = true;
+
+//The scavion
+
+
+
+
+    
+    ground.onReady = function () {
+        ground.optimize(100);
+
+       var mat = new BABYLON.StandardMaterial("mat", scene)
+  mat.diffuseTexture = new BABYLON.Texture("https://raw.githubusercontent.com/waverider404/game-assets/master/t0030_0.png", scene)
+var bdb = new BABYLON.Mesh.CreateBox("bdb", 2, scene)
+bdb.visibility = 0
+    BABYLON.SceneLoader.ImportMesh("", "https://raw.githubusercontent.com/waverider404/game-assets/master/", "scavion2.glb", scene, function (newMeshes) {
+        for(var i = 0; i<newMeshes.length; i++){
+           if(newMeshes[i].material != undefined){
+           newMeshes[i].material.dispose();
+           newMeshes[i].material = mat
+           newMeshes[i].material.sideOrientation = 0
+           newMeshes[i].addLODLevel(45, null);
+           newMeshes[i].occlusionQueryAlgorithmType = BABYLON.AbstractMesh.OCCLUSION_ALGORITHM_TYPE_CONSERVATIVE;
+           newMeshes[i].isOccluded = true;
+           newMeshes[i].occlusionType = BABYLON.AbstractMesh.OCCLUSION_TYPE_STRICT;
+
+           }
+            newMeshes[i].scaling.set(1.4, 1.4, 1.4)
+            
+        }
+        newMeshes[0].parent = bdb
+     
+        newMeshes[0].rotation.y = Math.PI
+        scene.registerBeforeRender(function(){
+            bdb.rotation.y = Math.atan2(camera.position.x - bdb.position.x, camera.position.z - bdb.position.z)
+            bdb.position = BABYLON.Vector3.Lerp(bdb.position, new BABYLON.Vector3(camera.position.x, 0, camera.position.z), .008)
+         bdb.position.y = ground.getHeightAtCoordinates(bdb.position.x, bdb.position.z)-.2;
+        })
+    });
+       // Shadows
+       var shadowGenerator = new BABYLON.ShadowGenerator(524, light);
+
+        //Grasses
+         var range = 100;
+            var count = 100;
+            var grasses = []
+    BABYLON.SceneLoader.ImportMesh("", "https://raw.githubusercontent.com/eddicke/gttt/master/assets/models/", "grass.glb", scene, function (newMeshes) {
+        // Set the target of the camera to the first imported mesh
+          var grassmat = new BABYLON.StandardMaterial("texture3", scene);
+    grassmat.diffuseTexture = new BABYLON.Texture("https://raw.githubusercontent.com/eddicke/gttt/master/assets/models/800px_COLOURBOX3763915.jpg", scene);
+for(var i = 0; i<newMeshes.length; i++){
+    newMeshes[i].material = grassmat
+}
+ for (var index = 0; index < count; index++) {
+    var newInstance = newMeshes[0].clone("i" + index);
+    var x = range / 2 - Math.random() * range;
+   var z = range / 2 - Math.random() * range;
+newInstance.position.x = x
+newInstance.position.z = z
+newInstance.position.y = ground.getHeightAtCoordinates(x, z);
+  newInstance.addLODLevel(45, null);
+                newInstance.occlusionQueryAlgorithmType = BABYLON.AbstractMesh.OCCLUSION_ALGORITHM_TYPE_CONSERVATIVE;
+                newInstance.isOccluded = true;
+                newInstance.occlusionType = BABYLON.AbstractMesh.OCCLUSION_TYPE_STRICT;
+grasses.push(newInstance)
+ }
+ scene.registerBeforeRender(function(){
+                var frustumPlanes = BABYLON.Frustum.GetPlanes(scene.getTransformMatrix());
+                for(var i = 0; i<grasses.length; i++){
+                    if(!grasses[i].isInFrustum(frustumPlanes)) {  
+                        grasses[i].setEnabled(false)
+                        } else{
+                             grasses[i].setEnabled(true)
+                        }
+                }
+            })
+    });
+    
+    //House
+   BABYLON.SceneLoader.ImportMesh("", "https://raw.githubusercontent.com/eddicke/gttt/master/assets/models/", "houses.glb", scene, function (newMeshes) {
+       var h = scene.getMeshByName("house8.003")
+       h.dispose();
+       for(var i = 0; i<newMeshes.length; i++){
+            var x = 5;
+                var z = 3;
+newMeshes[1].dispose()
+newMeshes[2].dispose()
+newMeshes[3].dispose()
+newMeshes[0].occlusionQueryAlgorithmType = BABYLON.AbstractMesh.OCCLUSION_ALGORITHM_TYPE_CONSERVATIVE;
+newMeshes[0].isOccluded = true;
+newMeshes[0].occlusionType = BABYLON.AbstractMesh.OCCLUSION_TYPE_STRICT;
+newMeshes[0].position.y = ground.getHeightAtCoordinates(x, z)-.4;
+/*newMeshes[0].scaling.x = 3
+newMeshes[0].scaling.z = 3*/
+newMeshes[i].checkCollisions = true;
+       }
+       scene.registerBeforeRender(function(){
+             
+               /* var frustumPlanes = BABYLON.Frustum.GetPlanes(scene.getTransformMatrix());
+                for(var i = 0; i<newMeshes.length; i++){
+                    if(!newMeshes[0].isInFrustum(frustumPlanes)) {  
+                        newMeshes[0].setEnabled(false)
+                        } else{
+                            newMeshes[0].setEnabled(true)
+                        }
+                }*/
+            })
+       
+    });
+        // Trees
+        BABYLON.SceneLoader.ImportMesh("", "https://www.babylonjs.com/assets/Tree/", "tree.babylon", scene, function (newMeshes) {
+            newMeshes[0].material.opacityTexture = null;
+            newMeshes[0].material.backFaceCulling = false;
+            //newMeshes[0].isVisible = false;
+            newMeshes[0].position.y = ground.getHeightAtCoordinates(0, 0); // Getting height from ground object
+
+           var range = 60;
+            var count = 100;
+            var trees = []
+            for (var index = 0; index < count; index++) {
+                var newInstance = newMeshes[0].clone("i" + index);
+                var x = range / 2 - Math.random() * range;
+                var z = range / 2 - Math.random() * range;
+newInstance.position.x = x
+newInstance.position.z = z
+newInstance.position.y = ground.getHeightAtCoordinates(x, z); // Getting height from ground object
+                newInstance.addLODLevel(45, null);
+                newInstance.occlusionQueryAlgorithmType = BABYLON.AbstractMesh.OCCLUSION_ALGORITHM_TYPE_CONSERVATIVE;
+                newInstance.isOccluded = true;
+                newInstance.occlusionType = BABYLON.AbstractMesh.OCCLUSION_TYPE_STRICT;
+                shadowGenerator.addShadowCaster(newInstance);
+	shadowGenerator.usePoissonSampling = true;
+
+	ground.receiveShadows = true;
+                trees.push(newInstance)
+            }
+            scene.registerBeforeRender(function(){
+                camera.rotation.x = 0
+                var frustumPlanes = BABYLON.Frustum.GetPlanes(scene.getTransformMatrix());
+                for(var i = 0; i<trees.length; i++){
+                    if(!trees[i].isInFrustum(frustumPlanes)) {  
+                        trees[i].setEnabled(false)
+                        } else{
+                             trees[i].setEnabled(true)
+                        }
+                }
+            })
+           
+            // Collisions
+            camera.checkCollisions = true;
+            camera.applyGravity = true;
+        });
+    }
+
+    return scene;
+};
+        
+        var scene = createScene()
+
+        engine.runRenderLoop(function () {
+            if (scene) {
+                scene.render();
+            }
+        });
+
+        // Resize
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
