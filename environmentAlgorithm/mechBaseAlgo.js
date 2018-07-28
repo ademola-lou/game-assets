@@ -1,4 +1,4 @@
-var createMechBase = function(){
+var createMechBase = function(scene){
 
     var roof1 = new BABYLON.StandardMaterial("texture3", scene);
     roof1.diffuseTexture = new BABYLON.Texture("https://rawcdn.githack.com/eddicke/chat-example/master/assets/textures/4ab67d7440051fc6392793a6e73d43e8--floor-texture-d-texture.jpg", scene);
