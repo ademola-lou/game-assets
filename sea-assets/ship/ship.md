@@ -1,0 +1,3 @@
+ship assets...
+liscence *
+credits*
