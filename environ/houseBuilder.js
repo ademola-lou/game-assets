@@ -1,4 +1,4 @@
-var buildHouse = function(url){
+var buildHouse = function(url, scene){
         
     	BABYLON.PolygonMeshBuilder.prototype.wallBuilder = function (w0, w1) {
 		var positions = [];
