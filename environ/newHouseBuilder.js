@@ -651,6 +651,9 @@ var buildHouse = function(url, scene){
 		//	positions[3 * p + 1] = height + 0.81;
 		}
 		floor.updateVerticesData(BABYLON.VertexBuffer.PositionKind, positions);
+		
+		ceiling.parent = floor;
+		midfloor.parent = floor;
 		return floor;
 	}
 	
@@ -884,5 +887,6 @@ var buildHouse = function(url, scene){
 	var smallRoofSection = roof(smallRoofprint, smallApexes, smallPlanes, 2, height - 1, 5.1);
     smallRoofSection.parent = house;
     roofSection.parent = house;
+	ceiling.parent = house;
     return {_body: house, _bigRoof: roofSection, _smallRoof:smallRoofSection};
 }
